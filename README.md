@@ -10,7 +10,7 @@
 [![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-black?logo=vercel)](https://vercel.com)
 
 ## Please choose a language you can understand:
-[中文](#中文版本)
+[中文](#中文版本) | 
 [English](#english-version)
 
 ## English Version
