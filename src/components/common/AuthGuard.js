@@ -1,3 +1,6 @@
+// src/components/common/AuthGuard.js
+'use client';
+
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -13,7 +16,9 @@ export default function AuthGuard({ children }) {
     }
   }, [user, role, isLoading, router]);
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">加载中...</div>;
+  }
   if (!user || !['admin', 'dev'].includes(role)) return null;
   return children;
 }

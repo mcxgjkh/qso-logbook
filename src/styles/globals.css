@@ -1,3 +1,310 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* src/styles/globals.css */
+@import 'tailwindcss';
+@import 'tailwindcss/utilities';
+
+/* ============================================
+   1. 基础颜色变量 - 温暖深色系统
+   ============================================ */
+@layer base {
+  :root {
+    /* 背景 - 温暖近黑，不刺眼 */
+    --color-background: #131210;
+    /* rgb(19, 18, 16) 温暖黑棕 */
+    --color-background-secondary: #262524;
+    /* 卡片/面板抬高面 */
+    --color-background-elevated: #1c1b1a;
+    /* 中等抬升 */
+
+    /* 前景 - 暖白，不刺眼 */
+    --color-foreground: #faf9f7;
+    /* 暖白 */
+    --color-foreground-muted: #a3a2a0;
+    /* 柔和文字 */
+
+    /* 玻璃质感 - 朦胧半透明层 */
+    --color-glass: rgba(255, 255, 255, 0.03);
+    /* 极淡玻璃层 */
+    --color-glass-hover: rgba(255, 255, 255, 0.06);
+    --color-glass-border: rgba(255, 255, 255, 0.06);
+
+    /* 强调色 - 从朦胧蓝到发光紫，营造梦幻感 */
+    --color-accent: #5b7cfa;
+    /* 核心蓝色 */
+    --color-accent-glow: rgba(91, 124, 250, 0.15);
+    /* 蓝色光晕 */
+    --color-accent-purple: #a78bfa;
+    /* 紫色调 */
+    --color-accent-purple-glow: rgba(167, 139, 250, 0.12);
+    /* 紫色光晕 */
+
+    /* 边框 - 极其微妙 */
+    --color-border: rgba(255, 255, 255, 0.06);
+
+    /* 字体 */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+}
+
+/* ============================================
+   2. 基础标签样式
+   ============================================ */
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    background: var(--color-background);
+    color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* 滚动条美化 */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  /* 针对数字输入框隐藏 spinner */
+  /* Chrome, Safari, Edge, Opera */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  /* Firefox */
+  input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
+
+/* ============================================
+   3. 背景光晕 - 核心氛围层
+   ============================================ */
+@layer components {
+  /* 页面背景光晕容器 - 放在布局最底层 */
+  .bg-glow-container {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    background: var(--color-background);
+  }
+
+  /* 主光晕 - 大型朦胧发光球体 */
+  .bg-glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.4;
+    will-change: transform, opacity;
+  }
+
+  /* 蓝色光晕 - 左上区域 */
+  .bg-glow-orb-blue {
+    width: 600px;
+    height: 600px;
+    top: -200px;
+    left: -200px;
+    background: radial-gradient(circle, #4f8cff 0%, transparent 70%);
+    opacity: 0.25;
+    animation: orbFloat 20s ease-in-out infinite;
+  }
+
+  /* 紫色光晕 - 右下区域 */
+  .bg-glow-orb-purple {
+    width: 500px;
+    height: 500px;
+    bottom: -150px;
+    right: -150px;
+    background: radial-gradient(circle, #a78bfa 0%, transparent 70%);
+    opacity: 0.2;
+    animation: orbFloat 25s ease-in-out infinite reverse;
+  }
+
+  /* 第三光晕 - 中间偏下，暖色 */
+  .bg-glow-orb-warm {
+    width: 400px;
+    height: 400px;
+    bottom: 10%;
+    left: 30%;
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.08) 0%, transparent 70%);
+    opacity: 0.3;
+    animation: orbFloat 30s ease-in-out infinite;
+  }
+
+  /* 网格纹理 - 极淡科技感 */
+  .bg-grid-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  }
+
+  /* 光晕浮动动画 */
+  @keyframes orbFloat {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    33% {
+      transform: translate(30px, -20px) scale(1.05);
+    }
+    66% {
+      transform: translate(-20px, 30px) scale(0.95);
+    }
+  }
+}
+
+/* ============================================
+   4. 玻璃质感组件
+   ============================================ */
+@layer components {
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .glass-card-hover {
+    transition: all 0.3s ease;
+  }
+  .glass-card-hover:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 12px 48px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+  }
+
+  /* 发光文字 */
+  .text-glow {
+    text-shadow: 0 0 40px rgba(91, 124, 250, 0.15);
+  }
+  .text-glow-strong {
+    text-shadow: 0 0 60px rgba(91, 124, 250, 0.25);
+  }
+
+  /* 自定义复选框 */
+  .checkbox-custom {
+    appearance: none;
+    width: 1.15rem;
+    height: 1.15rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 0.25rem;
+    background-color: rgba(255,255,255,0.05);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .checkbox-custom:checked {
+    background-color: #4f8cff;
+    border-color: #4f8cff;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='white'%3e%3cpath fill-rule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clip-rule='evenodd'/%3e%3c/svg%3e");
+    background-size: 70%;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .checkbox-custom:focus-visible {
+    outline: 2px solid #4f8cff;
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================
+   5. 工具类 - 毛玻璃卡片样式
+   ============================================ */
+@layer utilities {
+  .bg-glass {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .bg-glass-hover {
+    background: rgba(255, 255, 255, 0.07);
+  }
+  .border-glass {
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* ============================================
+   6. 实用类 - 颜色工具
+   ============================================ */
+@layer utilities {
+  .text-foreground {
+    color: var(--color-foreground);
+  }
+  .text-foreground-muted {
+    color: var(--color-foreground-muted);
+  }
+  .bg-background {
+    background: var(--color-background);
+  }
+  .bg-background-secondary {
+    background: var(--color-background-secondary);
+  }
+  .bg-background-elevated {
+    background: var(--color-background-elevated);
+  }
+  .border-glass {
+    border-color: var(--color-border);
+  }
+}
+
+/* 自定义下拉框 */
+.select-custom {
+  appearance: none;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyMCAyMCI+PHBhdGggc3Ryb2tlPSIjYzBjMGMwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMS41IiBkPSJNNiA4bDQgNCA0LTQiLz48L3N2Zz4=");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25rem 1.25rem;
+  padding-right: 2.5rem;
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* 下拉选项背景（深色） */
+.select-custom option {
+  background-color: #1c1b1a;
+  color: #faf9f7;
+}
