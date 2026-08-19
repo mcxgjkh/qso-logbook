@@ -1,4 +1,4 @@
-# Logbook
+# QSO Logbook
 
 [![GitHub stars](https://img.shields.io/github/stars/mcxgjkh/qso-logbook?style=social)](https://github.com/mcxgjkh/qso-logbook)
 [![GitHub forks](https://img.shields.io/github/forks/mcxgjkh/qso-logbook?style=social)](https://github.com/mcxgjkh/qso-logbook)
@@ -17,7 +17,7 @@
 
 ### Overview
 
-**Logbook** is a production‑ready, cloud‑native web application designed for amateur radio operators who need a secure, reliable, and feature‑rich system to manage their QSO (contact) logs. Built with modern web technologies, it leverages Next.js (App Router) on the frontend, Supabase (PostgreSQL) as the database, and is deployed on Vercel for global availability. The system implements strict role‑based access control (RBAC) – only users with `admin` or `dev` roles can access the logbook module, while ordinary `user` accounts are denied access entirely.
+**QSO Logbook** is a production‑ready, cloud‑native web application designed for amateur radio operators who need a secure, reliable, and feature‑rich system to manage their QSO (contact) logs. Built with modern web technologies, it leverages Next.js (App Router) on the frontend, Supabase (PostgreSQL) as the database, and is deployed on Vercel for global availability. The system implements strict role‑based access control (RBAC) – only users with `admin` or `dev` roles can access the logbook module, while ordinary `user` accounts are denied access entirely.
 
 Beyond basic CRUD operations, the application provides ADIF import/export, seamless integration with ARRL`s Logbook of The World (LoTW) via automated GitHub Actions, and a comprehensive set of RESTful APIs that enable external software (such as WSJT‑X, N1MM Logger, and custom automation scripts) to push QSOs directly. Additional features include advanced filtering, visual statistics, duplicate detection, Maidenhead grid distance calculation, and award tracking (DXCC, IOTA, SOTA, POTA, WWFF). The entire system is hardened against common web attacks with security headers, CSRF tokens, and Row‑Level Security (RLS) policies in the database.
 
@@ -306,7 +306,7 @@ This project is licensed under the GNU Affero General Public License version 3.0
 
 ### 项目概述
 
-**Logbook** 是一个生产级、云原生的业余无线电通联日志管理系统，专为需要安全、可靠且功能丰富的方式来管理 QSO（通联）记录的业余无线电爱好者设计。系统采用现代 Web 技术：前端使用 Next.js（App Router），数据库使用 Supabase（PostgreSQL），部署在 Vercel 上以实现全球快速访问。系统实施了严格的基于角色的访问控制（RBAC）—— 仅具有 `admin` 或 `dev` 角色的用户可以访问日志模块，普通的 `user` 帐户被完全拒绝访问。
+**QSO Logbook** 是一个生产级、云原生的业余无线电通联日志管理系统，专为需要安全、可靠且功能丰富的方式来管理 QSO（通联）记录的业余无线电爱好者设计。系统采用现代 Web 技术：前端使用 Next.js（App Router），数据库使用 Supabase（PostgreSQL），部署在 Vercel 上以实现全球快速访问。系统实施了严格的基于角色的访问控制（RBAC）—— 仅具有 `admin` 或 `dev` 角色的用户可以访问日志模块，普通的 `user` 帐户被完全拒绝访问。
 
 除了基本的增删改查操作，应用程序还提供了 ADIF 导入/导出、通过 GitHub Actions 自动化与 ARRL 的 Logbook of The World（LoTW）无缝集成，以及一套全面的 RESTful API，允许外部软件（如 WSJT‑X、N1MM Logger 和自定义自动化脚本）直接推送 QSO。其他功能包括高级筛选、可视化统计、重复检测、梅登黑德网格距离计算和奖状追踪（DXCC、IOTA、SOTA、POTA、WWFF）。整个系统通过安全头、CSRF 令牌和数据库行级安全（RLS）策略加固，抵御常见 Web 攻击。
 
