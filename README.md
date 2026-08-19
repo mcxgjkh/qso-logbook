@@ -1,5 +1,18 @@
 # Logbook
 
+[![GitHub stars](https://img.shields.io/github/stars/mcxgjkh/qso-logbook?style=social)](https://github.com/mcxgjkh/qso-logbook)
+[![GitHub forks](https://img.shields.io/github/forks/mcxgjkh/qso-logbook?style=social)](https://github.com/mcxgjkh/qso-logbook)
+[![License](https://img.shields.io/badge/License-AGPLv3-blue.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-14+-000000?logo=next.js)](https://nextjs.org)
+[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase)](https://supabase.io)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?logo=tailwind-css)](https://tailwindcss.com)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-black?logo=vercel)](https://vercel.com)
+
+## Please choose a language you can understand:
+[中文](#中文版本)
+[English](#english-version)
+
 ## English Version
 
 ### Overview
