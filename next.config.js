@@ -18,7 +18,6 @@ const fullVersion = buildNumber ? `${baseVersion}-build${buildNumber}` : baseVer
 
 const nextConfig = {
   reactStrictMode: true,
-  output: 'standalone',
   images: { domains: [] },
   turbopack: {},
   allowedDevOrigins: ['192.168.0.134'],

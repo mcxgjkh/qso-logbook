@@ -1,6 +1,6 @@
 {
   "name": "qso-logbook",
-  "version": "web_0.17.6_dev",
+  "version": "web_0.17.7_dev",
   "private": true,
   "scripts": {
     "dev": "next dev",
