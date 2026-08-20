@@ -75,7 +75,11 @@ export default function LogForm({ mode, logId = null }) {
       }
       router.push('/logs');
     } catch (error) {
-      alert('保存失败: ' + error.message);
+        if (error.message?.includes('重复') || error.code === 'DUPLICATE_QSO') {
+            alert('该QSO已存在，无法重复添加');
+        } else {
+            alert('保存失败: ' + error.message);
+        }
     }
   };
 

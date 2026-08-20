@@ -1,65 +1,63 @@
 // src/app/api/qso/upload/lotw/route.js
 import { authenticate, successResponse, errorResponse } from '@/lib/api-helpers';
+import { uploadForUser } from '@/lib/lotw/uploader';
 
 export async function POST(request) {
-  try {
-    const { user, supabase } = await authenticate(request);
-    const body = await request.json();
-    const { qso_ids } = body; // 可选
+    try {
+        const { user, supabase } = await authenticate(request);
+        const body = await request.json();
+        const { qso_ids, station_name } = body || {};
 
-    // 查询待上传的 QSO
-    let query = supabase
-      .from('qso_logs')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('uploaded_to_lotw', false);
+        // 构建查询
+        let query = supabase
+            .from('qso_logs')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('uploaded_to_lotw', false);
 
-    if (Array.isArray(qso_ids) && qso_ids.length > 0) {
-      query = query.in('id', qso_ids);
+        if (qso_ids && Array.isArray(qso_ids) && qso_ids.length > 0) {
+            query = query.in('id', qso_ids);
+        }
+
+        const { data: qsos, error } = await query;
+        if (error) return errorResponse(error.message, 'DB_ERROR', 500);
+        if (!qsos || qsos.length === 0) {
+            return errorResponse('No pending QSOs to upload', 'NO_PENDING', 400);
+        }
+
+        // 执行上传
+        const result = await uploadForUser(supabase, user.id, qsos, station_name);
+
+        // 记录历史
+        const historyPayload = {
+            user_id: user.id,
+            file_name: `lotw_upload_${new Date().toISOString().slice(0,10)}.adi`,
+            record_count: result.recordCount,
+            status: result.success ? 'success' : 'failed',
+            error_message: result.success ? null : result.output.slice(0, 1000),
+            tqsl_output: result.output.slice(0, 5000),
+        };
+        await supabase.from('lotw_upload_history').insert(historyPayload);
+
+        // 标记已上传
+        if (result.success && result.recordCount > 0) {
+            const uploadedIds = qsos.map(q => q.id);
+            await supabase
+                .from('qso_logs')
+                .update({ uploaded_to_lotw: true, lotw_upload_date: new Date().toISOString() })
+                .in('id', uploadedIds)
+                .eq('user_id', user.id);
+        }
+
+        return successResponse({
+            uploaded: result.recordCount,
+            total_pending: qsos.length,
+            success: result.success,
+            output: result.output.slice(0, 2000),
+        }, result.success ? 'Upload successful' : 'Upload failed');
+    } catch (err) {
+        if (err.status === 401 || err.status === 403) return err;
+        console.error('LoTW upload error:', err);
+        return errorResponse('Internal server error', 'SERVER_ERROR', 500);
     }
-
-    const { data: qsos, error: fetchError } = await query;
-    if (fetchError) {
-      console.error('Fetch pending QSOs error:', fetchError);
-      return errorResponse('Failed to fetch QSOs', 'DB_ERROR', 500);
-    }
-
-    if (qsos.length === 0) {
-      return errorResponse('No pending QSOs to upload', 'NO_PENDING', 400);
-    }
-
-    // 创建上传历史记录（状态 pending）
-    const { data: history, error: historyError } = await supabase
-      .from('lotw_upload_history')
-      .insert({
-        user_id: user.id,
-        file_name: `lotw_${new Date().toISOString().replace(/[:.]/g, '')}.adi`,
-        record_count: qsos.length,
-        status: 'pending',
-      })
-      .select()
-      .single();
-
-    if (historyError) {
-      console.error('Create history error:', historyError);
-      return errorResponse('Failed to create upload history', 'DB_ERROR', 500);
-    }
-
-    // 此处可触发异步任务（如发送到消息队列或调用云函数）
-    // 为了演示，我们直接标记为成功（实际应后台执行）
-    // 实际生产会通过 GitHub Actions 轮询或 webhook 更新状态
-
-    // 模拟：立即标记成功（但需在后台执行）
-    // 为了演示，我们直接返回，但 history 状态仍为 pending，由后台任务更新。
-
-    return successResponse({
-      history_id: history.id,
-      pending_count: qsos.length,
-      message: 'Upload task queued. Check history for status.',
-    }, 'Upload initiated', 202);
-  } catch (err) {
-    if (err instanceof Response) return err;
-    console.error('LoTW upload unhandled:', err);
-    return errorResponse('Internal Server Error', 'INTERNAL_ERROR', 500);
-  }
 }

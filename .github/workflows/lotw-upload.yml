@@ -1,18 +1,16 @@
 name: LoTW Auto Upload
+
 on:
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
+
 jobs:
-  upload:
+  batch-upload:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install TQSL
-        run: sudo apt-get update && sudo apt-get install -y trustedqsl
-      - name: Fetch QSOs and upload
+      - name: Trigger batch upload for all users
         run: |
-          echo "Implement TQSL upload logic here"
-        env:
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          API_URL: ${{ secrets.API_URL }}
+          curl -X POST "${{ secrets.API_URL }}/api/qso/upload/lotw/admin/batch" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json"
