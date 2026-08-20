@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { prepareTQSLDirectory, uploadADIFWithTQSL, cleanupTQSLDirectory } from '@/lib/tqsl-helper';
 import { generateADIF } from '@/lib/adif/generator';
 import { successResponse, errorResponse } from '@/lib/api-helpers';
+import { logError } from '@/lib/logger';
 
 export async function POST(request) {
     try {
@@ -99,7 +100,7 @@ export async function POST(request) {
             results,
         }, 'Batch upload completed');
     } catch (err) {
-        console.error('Batch upload error:', err);
+        logError('Batch upload error:', err);
         return errorResponse('Internal server error', 'SERVER_ERROR', 500);
     }
 }

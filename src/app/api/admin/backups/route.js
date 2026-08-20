@@ -1,6 +1,7 @@
 // src/app/api/admin/backups/route.js
 import { authenticate } from '@/lib/api-helpers';
 import { list } from '@vercel/blob';
+import { logError } from '@/lib/logger';
 
 export async function GET(request) {
   try {
@@ -19,7 +20,7 @@ export async function GET(request) {
     
     return Response.json({ success: true, data: files });
   } catch (error) {
-    console.error('List backups error:', error);
+    logError('List backups error:', error);
     return Response.json({ 
       success: false, 
       error: error.message || 'Failed to list backups' 

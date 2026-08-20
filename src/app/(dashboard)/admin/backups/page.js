@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/utils/apiClient';
+import { logError } from '@/lib/logger';
 
 export default function BackupsPage() {
   const { user, role, isLoading } = useAuth();
@@ -30,7 +31,7 @@ export default function BackupsPage() {
       const data = await apiClient('/api/admin/backups');
       setBackups(data.data);
     } catch (error) {
-      console.error('Load backups error:', error);
+      logError('Load backups error:', error);
     } finally {
       setLoading(false);
     }
@@ -44,6 +45,7 @@ export default function BackupsPage() {
         window.open(data.url, '_blank');
       }
     } catch (error) {
+      logError('Download backup error:', error);
       alert('下载失败: ' + error.message);
     } finally {
       setDownloading(null);

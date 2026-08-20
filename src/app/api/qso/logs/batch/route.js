@@ -1,6 +1,7 @@
 // src/app/api/qso/logs/batch/route.js
 import { authenticate, successResponse, errorResponse } from '@/lib/api-helpers';
 import { validateQSO } from '@/lib/validators/qsoValidator';
+import { logError } from '@/lib/logger';
 
 // 批量检查并过滤重复记录
 async function filterDuplicates(qsos, supabase, userId) {
@@ -122,7 +123,7 @@ export async function POST(request) {
         
     } catch (err) {
         if (err.status && (err.status === 401 || err.status === 403)) return err;
-        console.error('Batch import error:', err);
+        logError('Batch import error:', err);
         return errorResponse('Internal server error', 'SERVER_ERROR', 500);
     }
 }
@@ -152,7 +153,7 @@ export async function DELETE(request) {
     
   } catch (err) {
     if (err.status && err.status === 401) return err;
-    console.error('Batch delete error:', err);
+    logError('Batch delete error:', err);
     return errorResponse('Internal server error', 'SERVER_ERROR', 500);
   }
 }

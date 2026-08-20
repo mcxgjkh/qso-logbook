@@ -1,6 +1,7 @@
 // src/app/api/qso/export/adif/route.js
 import { authenticate, errorResponse } from '@/lib/api-helpers';
 import { generateADIF } from '@/lib/adif/generator';
+import { logError } from '@/lib/logger';
 
 export async function GET(request) {
   try {
@@ -74,7 +75,7 @@ export async function GET(request) {
     
   } catch (err) {
     if (err.status && err.status === 401) return err;
-    console.error('Export error:', err);
+    logError('Export error:', err);
     return errorResponse('Internal server error', 'SERVER_ERROR', 500);
   }
 }

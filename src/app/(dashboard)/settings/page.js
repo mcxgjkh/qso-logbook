@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { apiClient } from '@/utils/apiClient';
 import P12UploadForm from '@/components/settings/P12UploadForm';
 import StationManager from '@/components/settings/StationManager';
+import { logError } from '@/lib/logger';
 
 export default function SettingsPage() {
     const { user } = useAuth();
@@ -17,7 +18,7 @@ export default function SettingsPage() {
             const data = await apiClient('/api/user/lotw-config');
             setConfig(data.data);
         } catch (err) {
-            console.error('Load config error:', err);
+            logError('Load config error:', err);
         } finally {
             setLoading(false);
         }

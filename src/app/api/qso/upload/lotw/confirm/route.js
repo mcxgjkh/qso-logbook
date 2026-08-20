@@ -1,6 +1,7 @@
 // src/app/api/qso/upload/lotw/confirm/route.js
 import { createClient } from '@/lib/supabase/server';
 import { errorResponse, successResponse } from '@/lib/api-helpers';
+import { logError } from '@/lib/logger';
 
 export async function POST(request) {
   try {
@@ -41,7 +42,7 @@ export async function POST(request) {
       updated: data?.length || 0,
     }, 'QSOs marked as uploaded');
   } catch (err) {
-    console.error('Confirm upload error:', err);
+    logError('Confirm upload error:', err);
     return errorResponse('Internal server error', 'SERVER_ERROR', 500);
   }
 }

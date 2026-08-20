@@ -2,6 +2,7 @@
 import { authenticate } from '@/lib/api-helpers';
 import { head, download } from '@vercel/blob';
 import { decryptBackup } from '@/lib/backup-crypto';
+import { logError } from '@/lib/logger';
 
 export async function GET(request) {
   try {
@@ -34,7 +35,7 @@ export async function GET(request) {
       },
     });
   } catch (error) {
-    console.error('Download backup error:', error);
+    logError('Download backup error:', error);
     return Response.json({ 
       success: false, 
       error: error.message || 'Failed to download backup' 

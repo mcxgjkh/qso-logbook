@@ -4,28 +4,29 @@ import fs from 'fs';
 import path from 'path';
 import { glob } from 'glob';
 import { encryptBackup } from '../src/lib/backup-crypto.js';
+import { logError } from '@/lib/logger';
 
 const token = process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
 if (!token) {
-  console.error('VERCEL_BLOB_READ_WRITE_TOKEN is not set');
+  logError('VERCEL_BLOB_READ_WRITE_TOKEN is not set');
   process.exit(1);
 }
 
 // 检查加密密钥
 if (!process.env.BACKUP_ENCRYPTION_KEY) {
-  console.error('BACKUP_ENCRYPTION_KEY is not set');
+  logError('BACKUP_ENCRYPTION_KEY is not set');
   process.exit(1);
 }
 
 async function upload() {
   const files = await glob('backup-*.sql');
   if (files.length === 0) {
-    console.log('No backup files found');
+    logError('No backup files found');
     return;
   }
 
   for (const file of files) {
-    console.log(`Processing ${file}...`);
+    logInfo(`Processing ${file}...`);
     const content = fs.readFileSync(file);
     // 加密备份
     const encrypted = encryptBackup(content);
@@ -36,11 +37,11 @@ async function upload() {
       access: 'private',
       addRandomSuffix: false,
     });
-    console.log(`Uploaded ${filename}.enc -> ${result.url}`);
+    logInfo(`Uploaded ${filename}.enc -> ${result.url}`);
     
     // 上传成功后删除原始文件（可选）
     // fs.unlinkSync(file);
   }
 }
 
-upload().catch(console.error);
+upload().catch((err) => logError('Error occurred while uploading backups:', err));

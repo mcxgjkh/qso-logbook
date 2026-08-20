@@ -1,6 +1,7 @@
 // src/app/api/qso/upload/lotw/route.js
 import { authenticate, successResponse, errorResponse } from '@/lib/api-helpers';
 import { uploadForUser } from '@/lib/lotw/uploader';
+import { logError } from '@/lib/logger';
 
 export async function POST(request) {
     try {
@@ -35,7 +36,7 @@ export async function POST(request) {
             record_count: result.recordCount,
             status: result.success ? 'success' : 'failed',
             error_message: result.success ? null : result.output.slice(0, 1000),
-            tqsl_output: result.output.slice(0, 5000),
+            tqsl_output: result.output.slice(0, 500),
         };
         await supabase.from('lotw_upload_history').insert(historyPayload);
 
@@ -57,7 +58,7 @@ export async function POST(request) {
         }, result.success ? 'Upload successful' : 'Upload failed');
     } catch (err) {
         if (err.status === 401 || err.status === 403) return err;
-        console.error('LoTW upload error:', err);
+        logError('LoTW upload error:', err);
         return errorResponse('Internal server error', 'SERVER_ERROR', 500);
     }
 }

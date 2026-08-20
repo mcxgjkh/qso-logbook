@@ -48,7 +48,7 @@ export default function StatsPage() {
     if (isLoading) {
       const interval = setInterval(() => {
         setPhaseIndex((prev) => (prev + 1) % LOADING_PHRASES.length);
-      }, 1000);
+      }, 1500);
       return () => clearInterval(interval);
     } else {
       setPhaseIndex(0);

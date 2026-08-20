@@ -1,6 +1,7 @@
 // src/app/api/user/lotw-stations/route.js
 import { authenticate, successResponse, errorResponse } from '@/lib/api-helpers';
 import { randomUUID } from 'crypto';
+import { logError } from '@/lib/logger';
 
 // GET：获取所有台站
 export async function GET(request) {
@@ -85,7 +86,7 @@ export async function POST(request) {
         return successResponse(locations, '台站已保存');
     } catch (err) {
         if (err.status === 401 || err.status === 403) return err;
-        console.error('Save station error:', err);
+        logInfo('Save station error:', err);
         return errorResponse('内部错误', 'SERVER_ERROR', 500);
     }
 }

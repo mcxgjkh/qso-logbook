@@ -1,5 +1,6 @@
 // src/app/api/qso/upload/lotw/history/route.js
 import { authenticate, paginatedResponse, errorResponse } from '@/lib/api-helpers';
+import { logError } from '@/lib/logger';
 
 export async function GET(request) {
   try {
@@ -24,7 +25,7 @@ export async function GET(request) {
     return paginatedResponse(data || [], count || 0, page, limit);
   } catch (err) {
     if (err.status === 401 || err.status === 403) return err;
-    console.error('LoTW history error:', err);
+    logError('LoTW history error:', err);
     return errorResponse('Internal server error', 'SERVER_ERROR', 500);
   }
 }

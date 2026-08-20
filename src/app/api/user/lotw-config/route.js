@@ -3,6 +3,7 @@ import { authenticate, successResponse, errorResponse } from '@/lib/api-helpers'
 import { encryptP12Data, encryptP12Password, getExpiryDate } from '@/lib/crypto';
 import { verifyP12AndGetCallsign } from '@/lib/tqsl-helper';
 import { rateLimit } from '@/middleware/rate-limit';
+import { logError } from '@/lib/logger';
 
 export async function POST(request) {
     const rateLimitResponse = rateLimit(request, 3, 60000);
@@ -24,13 +25,11 @@ export async function POST(request) {
 
         const buffer = Buffer.from(await file.arrayBuffer());
 
-        // 验证密码并解析呼号
         const verifyResult = await verifyP12AndGetCallsign(buffer, password);
         if (!verifyResult.valid) {
             return errorResponse(verifyResult.error || '证书无效或密码错误', 'INVALID_CERT', 400);
         }
 
-        // 加密存储
         const { encrypted: p12Data, iv: p12Iv, tag: p12Tag } = encryptP12Data(buffer);
         const { encrypted: encPass, iv: passIv, tag: passTag } = encryptP12Password(password);
 
@@ -47,7 +46,6 @@ export async function POST(request) {
             updated_at: new Date().toISOString(),
         };
 
-        // 检查是否已有配置
         const { data: existing } = await supabase
             .from('user_lotw_configs')
             .select('id')
@@ -81,13 +79,13 @@ export async function POST(request) {
             message: '证书已导入，请配置台站地址'
         });
     } catch (err) {
-        if (err.status === 401 || err.status === 403) return err;
-        console.error('Upload p12 error:', err);
+        // 如果是 authenticate 抛出的 Response 对象（401/403），直接返回
+        if (err instanceof Response) return err;
+        logError('POST /api/user/lotw-config error:', err);
         return errorResponse('内部错误', 'SERVER_ERROR', 500);
     }
 }
 
-// 获取配置摘要（不返回敏感数据，只返回非敏感信息）
 export async function GET(request) {
     try {
         const { user, supabase } = await authenticate(request);
@@ -97,14 +95,19 @@ export async function GET(request) {
             .eq('user_id', user.id)
             .maybeSingle();
 
+        // 处理 data 为 null 的情况（用户从未上传证书）
+        if (!data) {
+            return successResponse({ hasConfig: false }, '未配置');
+        }
+
         if (error) {
             if (error.code === 'PGRST116') {
                 return successResponse({ hasConfig: false }, '未配置');
             }
+            logInfo('Supabase error:', error);
             return errorResponse(error.message, 'DB_ERROR', 500);
         }
 
-        // 检查是否过期
         let isExpired = false;
         if (data?.expires_at && new Date(data.expires_at) < new Date()) {
             isExpired = true;
@@ -119,12 +122,12 @@ export async function GET(request) {
             isExpired,
         });
     } catch (err) {
-        if (err.status === 401 || err.status === 403) return err;
+        if (err instanceof Response) return err;
+        logInfo('GET /api/user/lotw-config error:', err);
         return errorResponse('内部错误', 'SERVER_ERROR', 500);
     }
 }
 
-// 删除配置（仅在未过期时可删除，或强制删除）
 export async function DELETE(request) {
     try {
         const { user, supabase } = await authenticate(request);
@@ -135,7 +138,8 @@ export async function DELETE(request) {
         if (error) return errorResponse(error.message, 'DB_ERROR', 500);
         return successResponse({ deleted: true }, '已删除');
     } catch (err) {
-        if (err.status === 401 || err.status === 403) return err;
+        if (err instanceof Response) return err;
+        logInfo('DELETE /api/user/lotw-config error:', err);
         return errorResponse('内部错误', 'SERVER_ERROR', 500);
     }
 }
