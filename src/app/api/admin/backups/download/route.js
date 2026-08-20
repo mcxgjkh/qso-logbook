@@ -1,6 +1,6 @@
 // src/app/api/admin/backups/download/route.js
 import { authenticate } from '@/lib/api-helpers';
-import { head, download } from '@vercel/blob';
+import { head, getDownloadUrl } from '@vercel/blob';
 import { decryptBackup } from '@/lib/backup-crypto';
 import { logError } from '@/lib/logger';
 
@@ -14,19 +14,28 @@ export async function GET(request) {
       return Response.json({ success: false, error: 'Missing path' }, { status: 400 });
     }
     
-    // 不显式传递token，依赖环境变量自动加载
+    // 验证文件是否存在
     const blob = await head(pathname);
     if (!blob) {
       return Response.json({ success: false, error: 'File not found' }, { status: 404 });
     }
     
-    const response = await download(pathname);
+    // 获取临时下载 URL（默认有效期 1 小时）
+    const downloadUrl = await getDownloadUrl(pathname);
+    
+    // 从临时 URL 获取加密内容
+    const response = await fetch(downloadUrl);
+    if (!response.ok) {
+      throw new Error('Failed to download encrypted blob');
+    }
     const encryptedBuffer = await response.arrayBuffer();
     const encryptedData = Buffer.from(encryptedBuffer);
     
+    // 解密
     const decrypted = decryptBackup(encryptedData);
     const filename = pathname.replace('backups/', '').replace('.enc', '');
     
+    // 返回解密后的 SQL 文件
     return new Response(decrypted, {
       status: 200,
       headers: {
