@@ -13,28 +13,19 @@ export async function GET(request) {
       return Response.json({ success: false, error: 'Missing path' }, { status: 400 });
     }
     
-    // 验证文件是否存在
+    // 不显式传递token，依赖环境变量自动加载
     const blob = await head(pathname);
     if (!blob) {
       return Response.json({ success: false, error: 'File not found' }, { status: 404 });
     }
     
-    // 从 Blob 下载加密内容
     const response = await download(pathname);
     const encryptedBuffer = await response.arrayBuffer();
     const encryptedData = Buffer.from(encryptedBuffer);
     
-    // 解密
-    let decrypted;
-    try {
-      decrypted = decryptBackup(encryptedData);
-    } catch (err) {
-      console.error('Decryption failed:', err);
-      return Response.json({ success: false, error: 'Decryption failed' }, { status: 500 });
-    }
-    
-    // 返回解密后的 SQL 文件（作为下载）
+    const decrypted = decryptBackup(encryptedData);
     const filename = pathname.replace('backups/', '').replace('.enc', '');
+    
     return new Response(decrypted, {
       status: 200,
       headers: {
@@ -43,6 +34,10 @@ export async function GET(request) {
       },
     });
   } catch (error) {
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Download backup error:', error);
+    return Response.json({ 
+      success: false, 
+      error: error.message || 'Failed to download backup' 
+    }, { status: 500 });
   }
 }

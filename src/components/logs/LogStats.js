@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 const fetcher = (url) => apiClient(url);
 
 // 加载阶段文本
-const LOADING_PHRASES = ['检验服务器连接…', '拉取数据中…', '校验数据中…'];
+const LOADING_PHRASES = ['检验服务器连接…', '拉取数据中…', '解密数据中…', '校验数据中…', '渲染图表中…', '加载完成…'];
 
 const StatCard = ({ title, value, icon: Icon }) => (
   <div className="glass-card rounded-2xl p-6 glass-card-hover min-h-[100px] flex flex-col justify-between">
@@ -46,7 +46,7 @@ export default function LogStats() {
     if (isLoading) {
       const interval = setInterval(() => {
         setPhaseIndex((prev) => (prev + 1) % LOADING_PHRASES.length);
-      }, 1500);
+      }, 1000);
       return () => clearInterval(interval);
     } else {
       setPhaseIndex(0);
