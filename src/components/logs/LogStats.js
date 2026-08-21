@@ -53,7 +53,7 @@ export default function LogStats() {
   if (isLoading || !data) {
     const currentPhase = LOADING_PHRASES[phaseIndex];
     return (
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-8">
         {[...Array(4)].map((_, i) => (
           <SkeletonCard key={i} phase={currentPhase} />
         ))}
@@ -64,7 +64,7 @@ export default function LogStats() {
   const stats = data || { total: 0, monthly: 0, pendingLotw: 0, uniqueCalls: 0 };
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-8">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-8">
       <StatCard title="总通联" value={stats.total} icon={SignalIcon} />
       <StatCard title="本月通联" value={stats.monthly} icon={CalendarIcon} />
       <StatCard title="待上传 LoTW" value={stats.pendingLotw} icon={ArrowPathIcon} />

@@ -17,7 +17,7 @@ export default function AuthGuard({ children }) {
   }, [user, role, isLoading, router]);
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">加载中...</div>;
+    return <div className="flex justify-center items-center h-screen text-foreground-muted">加载中...</div>;
   }
   if (!user || !['admin', 'dev'].includes(role)) return null;
   return children;
