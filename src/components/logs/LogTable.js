@@ -14,8 +14,18 @@ export default function LogTable({
   limit,
   onPageChange,
 }) {
+  const safeQsos = Array.isArray(qsos) ? qsos : [];
   const [selected, setSelected] = useState([]);
   const totalPages = Math.ceil(total / limit);
+
+  // 自定义对话框状态
+  const [dialog, setDialog] = useState({
+    open: false,
+    type: 'confirm', // 'confirm' | 'error' | 'info'
+    title: '',
+    message: '',
+    onConfirm: null,
+  });
 
   const toggleSelect = (id) => {
     setSelected((prev) =>
@@ -24,25 +34,116 @@ export default function LogTable({
   };
 
   const toggleSelectAll = () => {
-    if (selected.length === qsos.length) {
+    if (selected.length === safeQsos.length) {
       setSelected([]);
     } else {
-      setSelected(qsos.map((q) => q.id));
+      setSelected(safeQsos.map((q) => q.id));
     }
   };
 
+  // 关闭对话框
+  const closeDialog = () => {
+    setDialog({ ...dialog, open: false });
+  };
+
+  // 显示确认对话框
+  const showConfirm = (message, onConfirm) => {
+    setDialog({
+      open: true,
+      type: 'confirm',
+      title: '确认操作',
+      message,
+      onConfirm: () => {
+        closeDialog();
+        onConfirm();
+      },
+    });
+  };
+
+  // 显示错误对话框
+  const showError = (message) => {
+    setDialog({
+      open: true,
+      type: 'error',
+      title: '操作被拒绝',
+      message,
+      onConfirm: null,
+    });
+  };
+
+  // 单条删除
+  const handleDelete = (qso) => {
+    if (qso.uploaded_to_lotw) {
+      showError('该记录已上传至 LoTW，禁止删除');
+      return;
+    }
+    showConfirm(`确定要删除与 ${qso.call_sign} 的通联记录吗？`, () => {
+      onDelete(qso.id);
+    });
+  };
+
+  // 批量删除
   const handleBatchDelete = () => {
     if (selected.length === 0) return;
-    if (confirm(`确定删除选中的 ${selected.length} 条记录吗？`)) {
+
+    // 检查是否有已上传的记录
+    const hasUploaded = safeQsos
+      .filter((q) => selected.includes(q.id))
+      .some((q) => q.uploaded_to_lotw);
+
+    if (hasUploaded) {
+      showError('选中的记录中包含已上传至 LoTW 的记录，禁止批量删除');
+      return;
+    }
+
+    showConfirm(`确定要删除选中的 ${selected.length} 条记录吗？`, () => {
       onBatchDelete(selected);
       setSelected([]);
-    }
+    });
   };
 
   if (loading) return <div className="text-center py-10 text-foreground-muted">加载日志中...</div>;
 
   return (
     <div className="glass-card rounded-2xl overflow-hidden">
+      {/* 自定义对话框 */}
+      {dialog.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="glass-card rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-foreground mb-2">
+              {dialog.type === 'confirm' ? '确认操作' : '操作被拒绝'}
+            </h3>
+            <p className="text-foreground-muted mb-6">{dialog.message}</p>
+            <div className="flex justify-end space-x-3">
+              {dialog.type === 'confirm' ? (
+                <>
+                  <button
+                    onClick={closeDialog}
+                    className="px-4 py-2 border border-glass rounded-xl text-sm text-foreground-muted hover:bg-glass-hover transition"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={dialog.onConfirm}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm hover:bg-blue-700 transition"
+                  >
+                    确认
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={closeDialog}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm hover:bg-blue-700 transition"
+                >
+                  知道了
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 批量删除按钮 */}
       {selected.length > 0 && (
         <div className="flex items-center justify-between px-4 py-2 bg-blue-500/10 border-b border-glass">
           <span className="text-sm text-blue-400">已选 {selected.length} 条</span>
@@ -62,7 +163,7 @@ export default function LogTable({
               <th className="px-4 py-3 text-left">
                 <input
                   type="checkbox"
-                  checked={selected.length === qsos.length && qsos.length > 0}
+                  checked={selected.length === safeQsos.length && safeQsos.length > 0}
                   onChange={toggleSelectAll}
                   className="checkbox-custom"
                 />
@@ -77,12 +178,12 @@ export default function LogTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-glass bg-transparent">
-            {qsos.length === 0 ? (
+            {safeQsos.length === 0 ? (
               <tr>
                 <td colSpan="8" className="px-4 py-8 text-center text-foreground-muted">暂无通联记录</td>
               </tr>
             ) : (
-              qsos.map((qso) => (
+              safeQsos.map((qso) => (
                 <tr key={qso.id} className="hover:bg-glass-hover transition bg-transparent">
                   <td className="px-4 py-3">
                     <input
@@ -120,9 +221,7 @@ export default function LogTable({
                       编辑
                     </Link>
                     <button
-                      onClick={() => {
-                        if (confirm('确定删除该记录吗？')) onDelete(qso.id);
-                      }}
+                      onClick={() => handleDelete(qso)}
                       className="text-red-400 hover:text-red-300 text-sm font-medium"
                     >
                       删除
