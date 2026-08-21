@@ -19,15 +19,12 @@ export default function StationDialog({ station, callsign, onClose, onSave }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // 当前可用的CQ和ITU选项
     const [cqOptions, setCqOptions] = useState([]);
     const [ituOptions, setItuOptions] = useState([]);
 
-    // 所有CQ分区（1-40）和ITU分区（1-75）
     const allCq = Array.from({ length: 40 }, (_, i) => i + 1);
     const allItu = Array.from({ length: 75 }, (_, i) => i + 1);
 
-    // 加载DXCC数据
     useEffect(() => {
         fetch('/data/dxcc.json')
             .then(res => {
@@ -44,7 +41,6 @@ export default function StationDialog({ station, callsign, onClose, onSave }) {
             });
     }, []);
 
-    // 当DXCC变化时，更新CQ和ITU选项
     const handleDxccChange = (selectedDxcc) => {
         const entity = dxccData.find(d => d.dxcc === parseInt(selectedDxcc));
         if (entity) {
@@ -61,7 +57,6 @@ export default function StationDialog({ station, callsign, onClose, onSave }) {
             }
             setForm(prev => ({ ...prev, dxcc: selectedDxcc }));
         } else {
-            // 未选择DXCC时，恢复所有分区选项
             setCqOptions(allCq);
             setItuOptions(allItu);
             setForm(prev => ({ ...prev, dxcc: selectedDxcc }));
@@ -74,13 +69,12 @@ export default function StationDialog({ station, callsign, onClose, onSave }) {
                 name: station.name,
                 dxcc: station.dxcc,
                 grid: station.grid,
-                itu: station.itu,
-                cqz: station.cqz,
+                itu: station.itu || '',
+                cqz: station.cqz || '',
                 iota: station.iota || '',
                 default: station.default || false,
                 id: station.id,
             });
-            // 根据已有DXCC设置选项
             const entity = dxccData.find(d => d.dxcc === parseInt(station.dxcc));
             if (entity) {
                 setCqOptions(entity.cq_zones || []);
@@ -90,7 +84,6 @@ export default function StationDialog({ station, callsign, onClose, onSave }) {
                 setItuOptions(allItu);
             }
         } else {
-            // 新建时，默认显示所有分区选项
             setCqOptions(allCq);
             setItuOptions(allItu);
         }
@@ -98,20 +91,19 @@ export default function StationDialog({ station, callsign, onClose, onSave }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!form.name || !form.dxcc || !form.grid || !form.itu || !form.cqz) {
-            alert('请填写所有必填字段');
+        if (!form.name || !form.dxcc || !form.grid) {
+            alert('请填写名称、DXCC 和网格定位（必填）');
             return;
         }
         const payload = {
             ...form,
             dxcc: parseInt(form.dxcc),
-            itu: parseInt(form.itu),
-            cqz: parseInt(form.cqz),
+            itu: form.itu ? parseInt(form.itu) : null,
+            cqz: form.cqz ? parseInt(form.cqz) : null,
         };
         onSave(payload);
     };
 
-    // DXCC 列表（按名称排序）
     const dxccOptions = dxccData
         .sort((a, b) => a.name.localeCompare(b.name))
         .map(item => ({
@@ -191,12 +183,11 @@ export default function StationDialog({ station, callsign, onClose, onSave }) {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-foreground-muted">ITU 分区 *</label>
+                            <label className="block text-sm font-medium text-foreground-muted">ITU 分区</label>
                             <select
                                 value={form.itu}
                                 onChange={(e) => setForm({ ...form, itu: e.target.value })}
                                 className="select-custom mt-1 block w-full px-4 py-2 border border-glass rounded-xl bg-glass focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-foreground"
-                                required
                             >
                                 <option value="">选择 ITU 分区</option>
                                 {ituOptions.map((v) => (
@@ -205,12 +196,11 @@ export default function StationDialog({ station, callsign, onClose, onSave }) {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-foreground-muted">CQ 分区 *</label>
+                            <label className="block text-sm font-medium text-foreground-muted">CQ 分区</label>
                             <select
                                 value={form.cqz}
                                 onChange={(e) => setForm({ ...form, cqz: e.target.value })}
                                 className="select-custom mt-1 block w-full px-4 py-2 border border-glass rounded-xl bg-glass focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-foreground"
-                                required
                             >
                                 <option value="">选择 CQ 分区</option>
                                 {cqOptions.map((v) => (

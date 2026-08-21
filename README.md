@@ -243,7 +243,7 @@ Please ensure your code adheres to the existing style and includes appropriate t
 
 ### License
 
-![AGPLv3](https://log.bh6rkw.dpdns.org/AGPLv3.svg)
+![AGPLv3](AGPLv3.svg)
 
 This project is licensed under the GNU Affero General Public License version 3.0 – see the `LICENSE` file for details.
 
@@ -262,7 +262,7 @@ This project is licensed under the GNU Affero General Public License version 3.0
 - Built with [Next.js](https://nextjs.org/), [Supabase](https://supabase.io/), and [Tailwind CSS](https://tailwindcss.com/).
 - ADIF parsing and generation based on the ADIF 3.1.4 specification.
 - LoTW integration leverages the TQSL CLI tool provided by ARRL.
-- Special thanks to the amateur radio community for continuous feedback and inspiration.
+- Internal Test - BH6RJD.
 
 ---
 
@@ -496,7 +496,7 @@ This project is licensed under the GNU Affero General Public License version 3.0
 
 ### 许可证
 
-![AGPLv3](https://log.bh6rkw.dpdns.org/AGPLv3.svg)
+![AGPLv3](AGPLv3.svg)
 
 本项目采用 GNU Affero General Public License version 3.0 许可证 – 详见 `LICENSE` 文件。
 
@@ -515,6 +515,6 @@ This project is licensed under the GNU Affero General Public License version 3.0
 - 使用 [Next.js](https://nextjs.org/)、[Supabase](https://supabase.io/) 和 [Tailwind CSS](https://tailwindcss.com/) 构建。
 - ADIF 解析和生成基于 ADIF 3.1.4 规范。
 - LoTW 集成利用了 ARRL 提供的 TQSL 命令行工具。
-- 特别感谢业余无线电社区的持续反馈和灵感。
+- 内测-BH6RJD。
 
 ---

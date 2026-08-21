@@ -9,12 +9,14 @@ export default function P12UploadForm({ onSuccess, existingCallsign }) {
     const [password, setPassword] = useState('');
     const [uploading, setUploading] = useState(false);
     const [message, setMessage] = useState(null);
+    const [warning, setWarning] = useState(null);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop: (acceptedFiles) => {
             if (acceptedFiles.length > 0) {
                 setFile(acceptedFiles[0]);
                 setMessage(null);
+                setWarning(null);
             }
         },
         accept: { 'application/x-pkcs12': ['.p12'] },
@@ -23,17 +25,19 @@ export default function P12UploadForm({ onSuccess, existingCallsign }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!file || !password) {
-            setMessage({ type: 'error', text: '请选择 .p12 文件并输入密码' });
+        if (!file) {
+            setMessage({ type: 'error', text: '请选择 .p12 文件' });
             return;
         }
 
         setUploading(true);
         setMessage(null);
+        setWarning(null);
 
         try {
             const formData = new FormData();
             formData.append('p12', file);
+            // 如果密码为空，也传空字符串
             formData.append('password', password);
 
             const response = await fetch('/api/user/lotw-config', {
@@ -43,6 +47,10 @@ export default function P12UploadForm({ onSuccess, existingCallsign }) {
             const result = await response.json();
             if (!result.success) {
                 throw new Error(result.error || '上传失败');
+            }
+            // 处理警告
+            if (result.data.warning) {
+                setWarning({ type: 'warning', text: result.data.warning });
             }
             setMessage({ type: 'success', text: `证书导入成功！呼号: ${result.data.callsign}` });
             setFile(null);
@@ -96,15 +104,15 @@ export default function P12UploadForm({ onSuccess, existingCallsign }) {
                 </div>
 
                 <div className="mt-4">
-                    <label className="block text-sm font-medium text-foreground-muted">证书密码</label>
+                    <label className="block text-sm font-medium text-foreground-muted">证书密码（如证书有密码则必填）</label>
                     <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="mt-1 block w-full px-4 py-2 border border-glass rounded-xl bg-glass focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                        placeholder="输入 .p12 文件的密码"
-                        required
+                        placeholder="输入 .p12 文件的密码（无密码则留空）"
                     />
+                    <p className="text-xs text-foreground-muted mt-1">如果证书无密码，请留空</p>
                 </div>
 
                 <button
@@ -122,6 +130,12 @@ export default function P12UploadForm({ onSuccess, existingCallsign }) {
                             : 'bg-red-500/10 border border-red-500/20 text-red-400'
                     }`}>
                         {message.text}
+                    </div>
+                )}
+
+                {warning && (
+                    <div className="mt-4 p-3 rounded-xl text-sm bg-yellow-500/10 border border-yellow-500/20 text-yellow-400">
+                        {warning.text}
                     </div>
                 )}
             </form>
