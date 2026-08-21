@@ -262,7 +262,7 @@ This project is licensed under the GNU Affero General Public License version 3.0
 - Built with [Next.js](https://nextjs.org/), [Supabase](https://supabase.io/), and [Tailwind CSS](https://tailwindcss.com/).
 - ADIF parsing and generation based on the ADIF 3.1.4 specification.
 - LoTW integration leverages the TQSL CLI tool provided by ARRL.
-- Internal Test - BH6RJD.
+- Internal Test - BH6RJD＆BH6RSH.
 
 ---
 
@@ -515,6 +515,6 @@ This project is licensed under the GNU Affero General Public License version 3.0
 - 使用 [Next.js](https://nextjs.org/)、[Supabase](https://supabase.io/) 和 [Tailwind CSS](https://tailwindcss.com/) 构建。
 - ADIF 解析和生成基于 ADIF 3.1.4 规范。
 - LoTW 集成利用了 ARRL 提供的 TQSL 命令行工具。
-- 内测-BH6RJD。
+- 内测-BH6RJD＆BH6RSH。
 
 ---

@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }) {
   return (
     <AuthGuard>
       <div className="min-h-screen relative flex flex-col">
-        <nav className="sticky top-0 z-10 glass border-b border-glass">
+        <nav className="sticky top-0 z-10 glass border-b border-glass backdrop-blur-md bg-glass/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16 items-center">
               <div className="flex items-center space-x-8">
