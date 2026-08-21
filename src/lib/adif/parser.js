@@ -1,6 +1,12 @@
 // src/lib/adif/parser.js
+
+/**
+ * 解析ADIF字符串为QSO对象数组
+ * @param {string} adifContent - ADIF格式的字符串
+ * @returns {Array<Object>} QSO对象数组
+ */
 export function parseADIF(adifContent) {
-  // 处理 BOM
+  // 处理 BOM（UTF-8 BOM: EF BB BF）
   if (adifContent.charCodeAt(0) === 0xFEFF) {
     adifContent = adifContent.slice(1);
   }
@@ -8,7 +14,7 @@ export function parseADIF(adifContent) {
   const qsos = [];
   let data = adifContent;
 
-  // 移除头部
+  // 移除 <EOH> 之前的内容（头部）
   const eohIndex = data.indexOf('<EOH>');
   if (eohIndex !== -1) {
     data = data.substring(eohIndex + 5);
@@ -54,7 +60,7 @@ export function parseADIF(adifContent) {
       if (valueEnd > trimmed.length) break;
 
       let value = trimmed.substring(valueStart, valueEnd);
-      // 移除反斜杠转义
+      // 移除反斜杠转义（ADIF 使用 \ 转义）
       value = value.replace(/\\/g, '').trim();
 
       // 字段映射
@@ -87,15 +93,14 @@ export function parseADIF(adifContent) {
         'POTA': 'pota',
         'COMMENT': 'comment',
         'CONTEST_ID': 'contest_id',
-        'PROP_MODE': 'propagation',   // 注意不同软件可能用 PROP_MODE
+        'PROP_MODE': 'propagation',   // 兼容不同软件
         'PROPAGATION': 'propagation',
         'SAT_NAME': 'satellite',
-        'SAT_MODE': 'satellite_mode', // 可选，不强制
+        'SAT_MODE': 'satellite_mode',
       };
 
       const targetKey = fieldMap[fieldName];
       if (targetKey) {
-        // 数值类型转换
         if (['frequency', 'freq_rx', 'cqz', 'itu_z'].includes(targetKey)) {
           qso[targetKey] = parseFloat(value);
           if (isNaN(qso[targetKey])) qso[targetKey] = null;
@@ -105,9 +110,12 @@ export function parseADIF(adifContent) {
         // 标记必填字段
         if (targetKey === 'call_sign') hasCall = true;
         if (targetKey === 'qso_date') hasDate = true;
-        if (targetKey === 'time_on') hasTime = true;
+        if (targetKey === 'time_on') {
+          hasTime = true;
+          // 存储原始格式，供后续判断是否包含秒
+          qso._time_on_raw = value;
+        }
       } else {
-        // 未知字段保存到 metadata
         if (!qso.metadata) qso.metadata = {};
         qso.metadata[fieldName] = value;
       }
@@ -115,23 +123,43 @@ export function parseADIF(adifContent) {
       i = valueEnd;
     }
 
-    // 检查是否包含必要字段
-    if (hasCall && hasDate && hasTime) {
+    // 如果有 CALL 且 QSO_DATE 存在，则视为有效
+    if (hasCall && hasDate) {
       // 日期格式转换：YYYYMMDD -> YYYY-MM-DD
       if (qso.qso_date && qso.qso_date.length === 8) {
         qso.qso_date = `${qso.qso_date.slice(0, 4)}-${qso.qso_date.slice(4, 6)}-${qso.qso_date.slice(6, 8)}`;
       }
-      // 时间格式转换：HHMM 或 HHMMSS -> HH:MM
-      if (qso.time_on && qso.time_on.length === 4) {
-        qso.time_on = `${qso.time_on.slice(0, 2)}:${qso.time_on.slice(2, 4)}`;
-      } else if (qso.time_on && qso.time_on.length === 6) {
-        qso.time_on = `${qso.time_on.slice(0, 2)}:${qso.time_on.slice(2, 4)}`;
+      // 处理时间
+      if (qso.time_on) {
+        // 如果原始时间包含秒（如 "10:47:06"），保留为 "HH:MM:SS"
+        // 如果原始时间为 "104706"，也转为 "10:47:06"
+        // 如果原始时间为 "1047"，转为 "10:47"
+        let timeStr = qso.time_on;
+        if (timeStr.length === 4 && !timeStr.includes(':')) {
+          // HHMM -> HH:MM
+          timeStr = `${timeStr.slice(0, 2)}:${timeStr.slice(2, 4)}`;
+        } else if (timeStr.length === 6 && !timeStr.includes(':')) {
+          // HHMMSS -> HH:MM:SS
+          timeStr = `${timeStr.slice(0, 2)}:${timeStr.slice(2, 4)}:${timeStr.slice(4, 6)}`;
+        }
+        qso.time_on = timeStr;
+        // 存储原始格式用于导出判断（秒是否包含）
+        if (!qso._time_on_raw) qso._time_on_raw = timeStr;
+      } else {
+        // 如果没有时间，默认 00:00
+        qso.time_on = '00:00';
+        qso._time_on_raw = '00:00';
       }
+
       // 处理 time_off
-      if (qso.time_off && qso.time_off.length === 4) {
-        qso.time_off = `${qso.time_off.slice(0, 2)}:${qso.time_off.slice(2, 4)}`;
-      } else if (qso.time_off && qso.time_off.length === 6) {
-        qso.time_off = `${qso.time_off.slice(0, 2)}:${qso.time_off.slice(2, 4)}`;
+      if (qso.time_off) {
+        let timeStr = qso.time_off;
+        if (timeStr.length === 4 && !timeStr.includes(':')) {
+          timeStr = `${timeStr.slice(0, 2)}:${timeStr.slice(2, 4)}`;
+        } else if (timeStr.length === 6 && !timeStr.includes(':')) {
+          timeStr = `${timeStr.slice(0, 2)}:${timeStr.slice(2, 4)}:${timeStr.slice(4, 6)}`;
+        }
+        qso.time_off = timeStr;
       }
 
       qsos.push(qso);

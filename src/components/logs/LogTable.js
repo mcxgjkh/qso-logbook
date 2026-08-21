@@ -13,6 +13,7 @@ export default function LogTable({
   page,
   limit,
   onPageChange,
+  onExport, // 新增：导出回调
 }) {
   const safeQsos = Array.isArray(qsos) ? qsos : [];
   const [selected, setSelected] = useState([]);
@@ -41,17 +42,15 @@ export default function LogTable({
     }
   };
 
-  // 关闭对话框
   const closeDialog = () => {
     setDialog({ ...dialog, open: false });
   };
 
-  // 显示确认对话框
-  const showConfirm = (message, onConfirm) => {
+  const showConfirm = (title, message, onConfirm) => {
     setDialog({
       open: true,
       type: 'confirm',
-      title: '确认操作',
+      title,
       message,
       onConfirm: () => {
         closeDialog();
@@ -60,46 +59,48 @@ export default function LogTable({
     });
   };
 
-  // 显示错误对话框
-  const showError = (message) => {
+  const showError = (title, message) => {
     setDialog({
       open: true,
       type: 'error',
-      title: '操作被拒绝',
+      title,
       message,
       onConfirm: null,
     });
   };
 
-  // 单条删除
   const handleDelete = (qso) => {
     if (qso.uploaded_to_lotw) {
-      showError('该记录已上传至 LoTW，禁止删除');
+      showError('操作被拒绝', '该记录已上传至 LoTW，禁止删除');
       return;
     }
-    showConfirm(`确定要删除与 ${qso.call_sign} 的通联记录吗？`, () => {
+    showConfirm('确认删除', `确定要删除与 ${qso.call_sign} 的通联记录吗？`, () => {
       onDelete(qso.id);
     });
   };
 
-  // 批量删除
   const handleBatchDelete = () => {
     if (selected.length === 0) return;
 
-    // 检查是否有已上传的记录
     const hasUploaded = safeQsos
       .filter((q) => selected.includes(q.id))
       .some((q) => q.uploaded_to_lotw);
 
     if (hasUploaded) {
-      showError('选中的记录中包含已上传至 LoTW 的记录，禁止批量删除');
+      showError('操作被拒绝', '选中的记录中包含已上传至 LoTW 的记录，禁止批量删除');
       return;
     }
 
-    showConfirm(`确定要删除选中的 ${selected.length} 条记录吗？`, () => {
+    showConfirm('确认批量删除', `确定要删除选中的 ${selected.length} 条记录吗？`, () => {
       onBatchDelete(selected);
       setSelected([]);
     });
+  };
+
+  const handleExport = () => {
+    if (onExport) {
+      onExport(selected);
+    }
   };
 
   if (loading) return <div className="text-center py-10 text-foreground-muted">加载日志中...</div>;
@@ -110,9 +111,7 @@ export default function LogTable({
       {dialog.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="glass-card rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold text-foreground mb-2">
-              {dialog.type === 'confirm' ? '确认操作' : '操作被拒绝'}
-            </h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">{dialog.title}</h3>
             <p className="text-foreground-muted mb-6">{dialog.message}</p>
             <div className="flex justify-end space-x-3">
               {dialog.type === 'confirm' ? (
@@ -143,16 +142,24 @@ export default function LogTable({
         </div>
       )}
 
-      {/* 批量删除按钮 */}
+      {/* 工具栏：批量删除和导出 */}
       {selected.length > 0 && (
         <div className="flex items-center justify-between px-4 py-2 bg-blue-500/10 border-b border-glass">
           <span className="text-sm text-blue-400">已选 {selected.length} 条</span>
-          <button
-            onClick={handleBatchDelete}
-            className="px-3 py-1 bg-red-600/80 text-white text-sm rounded-lg hover:bg-red-600 transition"
-          >
-            批量删除
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleExport}
+              className="px-3 py-1 bg-green-600/80 text-white text-sm rounded-lg hover:bg-green-600 transition"
+            >
+              导出选中
+            </button>
+            <button
+              onClick={handleBatchDelete}
+              className="px-3 py-1 bg-red-600/80 text-white text-sm rounded-lg hover:bg-red-600 transition"
+            >
+              批量删除
+            </button>
+          </div>
         </div>
       )}
 
