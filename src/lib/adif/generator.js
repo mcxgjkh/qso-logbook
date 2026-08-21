@@ -69,10 +69,18 @@ function qsoToADIF(qso, index) {
       value = value.replace(/-/g, '');
       if (value.length !== 8) continue;
     }
-    // 时间格式：HH:MM -> HHMM
+    // 时间格式：保留原始格式（HH:MM 或 HH:MM:SS），移除冒号
     if (qsoField === 'time_on' || qsoField === 'time_off') {
-      value = value.replace(/:/g, '');
-      if (value.length !== 4) continue;
+      // 如果有秒则移除冒号后长度为6，否则为4
+      const timeParts = value.split(':');
+      if (timeParts.length === 3) {
+        // HH:MM:SS -> HHMMSS
+        value = timeParts.join('');
+      } else {
+        // HH:MM -> HHMM
+        value = timeParts.join('');
+      }
+      if (value.length !== 4 && value.length !== 6) continue;
     }
     // 数值转换
     if (['frequency', 'freq_rx', 'cqz', 'itu_z'].includes(qsoField)) {

@@ -13,6 +13,7 @@ export default function ADIFImporter() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [previews, setPreviews] = useState({});
+  const [parsedCount, setParsedCount] = useState(0); // 新增：解析出的记录数
 
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length === 0) return;
@@ -20,7 +21,17 @@ export default function ADIFImporter() {
     setError(null);
     setResult(null);
     setPreviews({});
+    setParsedCount(0);
 
+    // 解析每个文件，统计记录数（只做统计，不导入）
+    acceptedFiles.forEach(async (file) => {
+      const content = await file.text();
+      const { parseADIF } = await import('@/lib/adif/parser');
+      const qsos = parseADIF(content);
+      setParsedCount(prev => prev + qsos.length);
+    });
+
+    // 读取预览
     acceptedFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -81,6 +92,7 @@ export default function ADIFImporter() {
         details: allResults,
       });
 
+      // 刷新父页面（如果成功）
       if (totalInserted > 0) {
         setTimeout(() => router.push('/logs'), 3000);
       }
@@ -96,6 +108,7 @@ export default function ADIFImporter() {
     setPreviews({});
     setResult(null);
     setError(null);
+    setParsedCount(0);
   };
 
   return (
@@ -125,40 +138,45 @@ export default function ADIFImporter() {
       </div>
 
       {files.length > 0 && (
-        <div className="mt-4 space-y-3">
-          {files.map((file) => (
-            <div key={file.name} className="p-4 bg-glass rounded-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-medium text-foreground">{file.name}</span>
-                  <span className="text-foreground-muted text-sm ml-2">({(file.size / 1024).toFixed(1)} KB)</span>
+        <div className="mt-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-foreground-muted">共 {files.length} 个文件，解析出 {parsedCount} 条记录</span>
+            <button
+              onClick={handleClear}
+              className="text-sm text-foreground-muted hover:text-foreground"
+            >
+              清空所有文件
+            </button>
+          </div>
+          <div className="space-y-3">
+            {files.map((file) => (
+              <div key={file.name} className="p-4 bg-glass rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-medium text-foreground">{file.name}</span>
+                    <span className="text-foreground-muted text-sm ml-2">({(file.size / 1024).toFixed(1)} KB)</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const newFiles = files.filter((f) => f.name !== file.name);
+                      setFiles(newFiles);
+                      const newPreviews = { ...previews };
+                      delete newPreviews[file.name];
+                      setPreviews(newPreviews);
+                    }}
+                    className="text-sm text-foreground-muted hover:text-foreground"
+                  >
+                    移除
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    const newFiles = files.filter((f) => f.name !== file.name);
-                    setFiles(newFiles);
-                    const newPreviews = { ...previews };
-                    delete newPreviews[file.name];
-                    setPreviews(newPreviews);
-                  }}
-                  className="text-sm text-foreground-muted hover:text-foreground"
-                >
-                  移除
-                </button>
+                {previews[file.name] && (
+                  <pre className="mt-2 text-xs text-foreground-muted bg-black/20 p-2 rounded max-h-40 overflow-auto">
+                    {previews[file.name]}
+                  </pre>
+                )}
               </div>
-              {previews[file.name] && (
-                <pre className="mt-2 text-xs text-foreground-muted bg-black/20 p-2 rounded max-h-40 overflow-auto">
-                  {previews[file.name]}
-                </pre>
-              )}
-            </div>
-          ))}
-          <button
-            onClick={handleClear}
-            className="text-sm text-foreground-muted hover:text-foreground"
-          >
-            清空所有文件
-          </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -207,7 +225,7 @@ export default function ADIFImporter() {
           disabled={files.length === 0 || uploading}
           className="px-6 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition"
         >
-          {uploading ? '导入中...' : `导入 (${files.length} 个文件)`}
+          {uploading ? '导入中...' : `导入 (${parsedCount} 条记录)`}
         </button>
       </div>
     </div>
