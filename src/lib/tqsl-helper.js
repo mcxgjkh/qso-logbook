@@ -13,22 +13,50 @@ const writeFile = fs.writeFile;
 const unlink = fs.unlink;
 const rm = fs.rm;
 
+/**
+ * 验证 .p12 文件密码并解析呼号
+ * 支持无密码证书
+ * @param {Buffer} p12Buffer - .p12 文件内容
+ * @param {string} password - 用户输入的密码（可能为空）
+ * @returns {Promise<{ valid: boolean, callsign: string, hasPassword: boolean, error?: string }>}
+ */
 export async function verifyP12AndGetCallsign(p12Buffer, password) {
     const tempDir = path.join(os.tmpdir(), 'p12-verify-' + Date.now());
     await mkdir(tempDir, { recursive: true });
     const p12Path = path.join(tempDir, 'test.p12');
     await writeFile(p12Path, p12Buffer);
 
+    let hasPassword = false;
+    let callsign = '';
     try {
-        const { stdout } = await execAsync(
-            `openssl pkcs12 -in "${p12Path}" -nokeys -passin pass:${password}`
-        );
-        const match = stdout.match(/CN=([^,\s]+)/);
-        if (!match) throw new Error('无法解析呼号');
-        return { valid: true, callsign: match[1] };
+        // 先尝试空密码
+        try {
+            const { stdout } = await execAsync(
+                `openssl pkcs12 -in "${p12Path}" -nokeys -passin pass:''`
+            );
+            // 空密码成功 -> 证书无密码
+            hasPassword = false;
+            const match = stdout.match(/CN=([^,\s]+)/);
+            if (match) callsign = match[1];
+            else throw new Error('无法解析呼号');
+        } catch (err) {
+            // 空密码失败 -> 证书有密码
+            hasPassword = true;
+            if (!password || password.trim() === '') {
+                throw new Error('证书有密码，请填写密码');
+            }
+            // 验证用户密码
+            const { stdout } = await execAsync(
+                `openssl pkcs12 -in "${p12Path}" -nokeys -passin pass:${password}`
+            );
+            const match = stdout.match(/CN=([^,\s]+)/);
+            if (match) callsign = match[1];
+            else throw new Error('无法解析呼号');
+        }
+        return { valid: true, callsign, hasPassword };
     } catch (err) {
         logWarn('证书验证失败', err.message);
-        return { valid: false, callsign: '', error: '密码错误或证书无效' };
+        return { valid: false, callsign: '', error: err.message };
     } finally {
         await rm(tempDir, { recursive: true, force: true });
     }
