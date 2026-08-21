@@ -81,6 +81,13 @@ export async function POST(request) {
     .select()
     .single();
 
-  if (error) return new Response(error.message, { status: 500 });
-  return Response.json(data, { status: 201 });
+  if (error) {
+    // 检查是否为唯一约束冲突
+    if (error.code === '23505') {
+      return errorResponse('该QSO已存在（重复记录）', 'DUPLICATE_QSO', 409);
+    }
+    return errorResponse(error.message, 'DB_ERROR', 500);
+  }
+
+  return successResponse(data, 'QSO创建成功', 201);
 }

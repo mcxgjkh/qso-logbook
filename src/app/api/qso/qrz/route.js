@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedUser, successResponse, errorResponse } from '@/lib/api-helpers';
+import { logError } from '@/lib/logger';
 
 // 简单缓存（内存，生产可用 Redis）
 const cache = new Map();
@@ -42,7 +43,7 @@ export async function GET(request) {
     return successResponse(mockData, 'QRZ lookup successful');
   } catch (err) {
     if (err instanceof NextResponse) return err;
-    console.error('GET /qrz error:', err);
+    logError('GET /qrz error:', err);
     return errorResponse('QRZ lookup failed', 500);
   }
 }

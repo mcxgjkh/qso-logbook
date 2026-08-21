@@ -39,7 +39,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4 relative">
       <div className="max-w-md w-full space-y-8 glass-card rounded-2xl p-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-foreground">呼号日志</h2>
+          <h2 className="text-3xl font-bold text-foreground">QSO Logbook</h2>
           <p className="text-sm text-foreground-muted mt-1">登录以管理您的通联记录</p>
         </div>
 

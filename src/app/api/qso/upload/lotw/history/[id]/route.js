@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedUser, successResponse, errorResponse } from '@/lib/api-helpers';
+import { logError } from '@/lib/logger';
 
 export async function GET(request, { params }) {
   try {
@@ -20,7 +21,7 @@ export async function GET(request, { params }) {
     return successResponse(data);
   } catch (err) {
     if (err instanceof NextResponse) return err;
-    console.error('GET /upload/lotw/history/:id error:', err);
+    logError('GET /upload/lotw/history/:id error:', err);
     return errorResponse('Failed to fetch history detail', 500);
   }
 }

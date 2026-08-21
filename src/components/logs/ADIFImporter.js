@@ -1,8 +1,162 @@
-import { useState } from 'react';
-import { parseADIF } from '@/lib/adif/parser';
+// src/components/logs/ADIFImporter.js
+'use client';
+
+import { useState, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { apiClient } from '@/utils/apiClient';
+import { useRouter } from 'next/navigation';
 
 export default function ADIFImporter() {
+  const router = useRouter();
   const [file, setFile] = useState(null);
-  const handleUpload = async () => { /* 调用 API */ };
-  return <div>{/* 文件上传区域 */}</div>;
+  const [uploading, setUploading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [preview, setPreview] = useState(null);
+
+  const onDrop = useCallback((acceptedFiles) => {
+    const selectedFile = acceptedFiles[0];
+    if (!selectedFile) return;
+    
+    setFile(selectedFile);
+    setError(null);
+    setResult(null);
+    setPreview(null);
+    
+    // 读取文件预览（前500字符）
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target.result;
+      setPreview(content.slice(0, 500) + (content.length > 500 ? '...' : ''));
+    };
+    reader.readAsText(selectedFile);
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'text/plain': ['.adi', '.adif', '.txt'],
+      'application/octet-stream': ['.adi', '.adif'],
+    },
+    maxFiles: 1,
+  });
+
+  const handleUpload = async () => {
+    if (!file) return;
+    
+    setUploading(true);
+    setError(null);
+    setResult(null);
+    
+    try {
+      const content = await file.text();
+      const response = await apiClient('/api/qso/logs/batch', {
+        method: 'POST',
+        body: JSON.stringify({ adif_content: content }),
+      });
+      
+      setResult(response.data);
+      // 成功后跳转回日志列表
+      if (response.data.inserted > 0) {
+        setTimeout(() => router.push('/logs'), 2000);
+      }
+    } catch (err) {
+      setError(err.message || '导入失败');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleClear = () => {
+    setFile(null);
+    setPreview(null);
+    setResult(null);
+    setError(null);
+  };
+
+  return (
+    <div className="glass-card rounded-2xl p-6 max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold text-foreground mb-6">导入 ADIF 文件</h2>
+      
+      <div
+        {...getRootProps()}
+        className={`border-2 border-dashed rounded-xl p-8 text-center transition cursor-pointer ${
+          isDragActive ? 'border-blue-400 bg-blue-500/10' : 'border-glass hover:border-blue-400/50'
+        }`}
+      >
+        <input {...getInputProps()} />
+        <div className="text-foreground-muted">
+          <svg className="w-12 h-12 mx-auto mb-4 text-foreground-muted/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          {isDragActive ? (
+            <p>释放文件以上传</p>
+          ) : (
+            <>
+              <p>拖拽 ADIF 文件到这里，或点击选择</p>
+              <p className="text-xs mt-2">支持 .adi, .adif, .txt</p>
+            </>
+          )}
+        </div>
+      </div>
+      
+      {file && (
+        <div className="mt-4 p-4 bg-glass rounded-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="font-medium text-foreground">{file.name}</span>
+              <span className="text-foreground-muted text-sm ml-2">({(file.size / 1024).toFixed(1)} KB)</span>
+            </div>
+            <button
+              onClick={handleClear}
+              className="text-sm text-foreground-muted hover:text-foreground"
+            >
+              移除
+            </button>
+          </div>
+          {preview && (
+            <pre className="mt-2 text-xs text-foreground-muted bg-black/20 p-2 rounded max-h-40 overflow-auto">
+              {preview}
+            </pre>
+          )}
+        </div>
+      )}
+      
+      {error && (
+        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+          {error}
+        </div>
+      )}
+      
+      {result && (
+        <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm">
+          <p>成功导入 {result.inserted} 条记录</p>
+          {result.duplicates > 0 && (
+            <p className="text-yellow-400 mt-1">跳过 {result.duplicates} 条重复记录</p>
+          )}
+          {result.errors && result.errors.length > 0 && (
+            <p className="text-yellow-400 mt-1">有 {result.errors.length} 条记录校验失败</p>
+          )}
+          {result.inserted > 0 && <p className="text-xs mt-1">即将跳转到日志列表...</p>}
+        </div>
+      )}
+      
+      <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-glass">
+        <button
+          type="button"
+          onClick={() => router.push('/logs')}
+          className="px-6 py-2 border border-glass rounded-xl text-sm font-medium text-foreground-muted bg-glass hover:bg-glass-hover transition"
+        >
+          取消
+        </button>
+        <button
+          onClick={handleUpload}
+          disabled={!file || uploading}
+          className="px-6 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition"
+        >
+          {uploading ? '导入中...' : '导入'}
+        </button>
+      </div>
+    </div>
+  );
 }

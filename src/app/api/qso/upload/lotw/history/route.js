@@ -1,35 +1,31 @@
-import { NextResponse } from 'next/server';
-import { getAuthenticatedUser, parsePagination, successResponse, errorResponse } from '@/lib/api-helpers';
+// src/app/api/qso/upload/lotw/history/route.js
+import { authenticate, paginatedResponse, errorResponse } from '@/lib/api-helpers';
+import { logError } from '@/lib/logger';
 
 export async function GET(request) {
   try {
-    const { user, supabase } = await getAuthenticatedUser(request);
-    const { searchParams } = new URL(request.url);
-    const { page, limit, offset } = parsePagination(searchParams);
+    const { user, supabase } = await authenticate(request);
 
-    let query = supabase
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const offset = (page - 1) * limit;
+
+    const { data, count, error } = await supabase
       .from('lotw_upload_history')
       .select('*', { count: 'exact' })
       .eq('user_id', user.id)
-      .order('uploaded_at', { ascending: false });
+      .order('uploaded_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
-    // 按状态过滤
-    if (searchParams.has('status')) {
-      query = query.eq('status', searchParams.get('status'));
+    if (error) {
+      return errorResponse(error.message, 'DB_ERROR', 500);
     }
 
-    const { data, count, error } = await query.range(offset, offset + limit - 1);
-    if (error) throw error;
-
-    return successResponse(data, 'History fetched', {
-      page,
-      limit,
-      total: count,
-      pages: Math.ceil(count / limit),
-    });
+    return paginatedResponse(data || [], count || 0, page, limit);
   } catch (err) {
-    if (err instanceof NextResponse) return err;
-    console.error('GET /upload/lotw/history error:', err);
-    return errorResponse('Failed to fetch history', 500);
+    if (err.status === 401 || err.status === 403) return err;
+    logError('LoTW history error:', err);
+    return errorResponse('Internal server error', 'SERVER_ERROR', 500);
   }
 }

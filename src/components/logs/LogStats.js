@@ -4,11 +4,15 @@
 import useSWR from 'swr';
 import { apiClient } from '@/utils/apiClient';
 import { SignalIcon, CalendarIcon, ArrowPathIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect } from 'react';
 
 const fetcher = (url) => apiClient(url);
 
+// 加载阶段文本
+const LOADING_PHRASES = ['检验服务器连接…', '拉取数据中…', '解密数据中…', '校验数据中…', '渲染图表中…', '加载完成…'];
+
 const StatCard = ({ title, value, icon: Icon }) => (
-  <div className="glass-card rounded-2xl p-6 glass-card-hover">
+  <div className="glass-card rounded-2xl p-6 glass-card-hover min-h-[100px] flex flex-col justify-between">
     <div className="flex items-center justify-between">
       <div>
         <p className="text-sm font-medium text-foreground-muted">{title}</p>
@@ -19,14 +23,43 @@ const StatCard = ({ title, value, icon: Icon }) => (
   </div>
 );
 
-export default function LogStats() {
-  const { data, isLoading } = useSWR('/api/qso/stats', fetcher);
+// 加载占位组件 - 显示动态阶段文本
+const SkeletonCard = ({ phase }) => (
+  <div className="glass-card rounded-2xl p-6 min-h-[100px] flex items-center justify-center">
+    <div className="flex items-center gap-3">
+      <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+      <span className="text-foreground-muted text-sm">{phase}</span>
+    </div>
+  </div>
+);
 
-  if (isLoading) {
+export default function LogStats() {
+  const { data, isLoading } = useSWR('/api/qso/stats', fetcher, {
+    fallbackData: null,
+    revalidateOnFocus: false,
+  });
+
+  const [phaseIndex, setPhaseIndex] = useState(0);
+
+  // 加载时循环切换阶段文本
+  useEffect(() => {
+    if (isLoading) {
+      const interval = setInterval(() => {
+        setPhaseIndex((prev) => (prev + 1) % LOADING_PHRASES.length);
+      }, 1500);
+      return () => clearInterval(interval);
+    } else {
+      setPhaseIndex(0);
+    }
+  }, [isLoading]);
+
+  // 显示加载占位
+  if (isLoading || !data) {
+    const currentPhase = LOADING_PHRASES[phaseIndex];
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="glass-card rounded-2xl p-6 animate-pulse h-24" />
+          <SkeletonCard key={i} phase={currentPhase} />
         ))}
       </div>
     );

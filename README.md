@@ -243,7 +243,7 @@ Please ensure your code adheres to the existing style and includes appropriate t
 
 ### License
 
-![AGPLv3](https://log.bh6rkw.dpdns.org/AGPLv3.svg)
+![AGPLv3](https://logdev.bh6rkw.dpdns.org/AGPLv3.svg)
 
 This project is licensed under the GNU Affero General Public License version 3.0 – see the `LICENSE` file for details.
 
@@ -496,7 +496,7 @@ This project is licensed under the GNU Affero General Public License version 3.0
 
 ### 许可证
 
-![AGPLv3](https://log.bh6rkw.dpdns.org/AGPLv3.svg)
+![AGPLv3](https://logdev.bh6rkw.dpdns.org/AGPLv3.svg)
 
 本项目采用 GNU Affero General Public License version 3.0 许可证 – 详见 `LICENSE` 文件。
 
