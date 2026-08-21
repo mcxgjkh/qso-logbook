@@ -10,11 +10,14 @@ const withPWA = require('next-pwa')({
 const packageJson = require('./package.json');
 const baseVersion = packageJson.version;
 
-// 获取 Vercel 构建号（仅在 Vercel 环境中存在）
 const buildNumber = process.env.VERCEL_BUILD_NUMBER || null;
+const commitSha = process.env.VERCEL_GIT_COMMIT_SHA || null;
+// 取前7位作为简短标识
+const commitShort = commitSha ? commitSha.slice(0, 7) : null;
 
-// 构建完整版本号：v1.0.0-build123
-const fullVersion = buildNumber ? `${baseVersion}-build${buildNumber}` : baseVersion;
+const fullVersion = buildNumber ? `${baseVersion}-build${buildNumber}` 
+                  : commitShort ? `${baseVersion}-${commitShort}`
+                  : baseVersion;
 
 const nextConfig = {
   reactStrictMode: true,
