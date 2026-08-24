@@ -73,6 +73,10 @@ export default function LogForm({ mode, logId = null }) {
       } else {
         await updateQSO(logId, formattedData);
       }
+      // ✨ 移除焦点，防止停留在输入框
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
       router.push('/logs');
     } catch (error) {
       alert('保存失败: ' + error.message);
@@ -86,7 +90,6 @@ export default function LogForm({ mode, logId = null }) {
       </h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-          {/* 呼号 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">
               呼号 <span className="text-red-400">*</span>
@@ -99,7 +102,6 @@ export default function LogForm({ mode, logId = null }) {
             {errors.call_sign && <p className="mt-1 text-sm text-red-400">{errors.call_sign.message}</p>}
           </div>
 
-          {/* UTC 日期 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">
               UTC 日期 <span className="text-red-400">*</span>
@@ -113,7 +115,6 @@ export default function LogForm({ mode, logId = null }) {
             {errors.qso_date && <p className="mt-1 text-sm text-red-400">{errors.qso_date.message}</p>}
           </div>
 
-          {/* UTC 时间 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">
               UTC 时间 (HH:MM) <span className="text-red-400">*</span>
@@ -127,7 +128,6 @@ export default function LogForm({ mode, logId = null }) {
             {errors.time_on && <p className="mt-1 text-sm text-red-400">{errors.time_on.message}</p>}
           </div>
 
-          {/* 模式 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">
               模式 <span className="text-red-400">*</span>
@@ -144,7 +144,6 @@ export default function LogForm({ mode, logId = null }) {
             {errors.mode && <p className="mt-1 text-sm text-red-400">{errors.mode.message}</p>}
           </div>
 
-          {/* 波段 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">
               波段 <span className="text-red-400">*</span>
@@ -161,7 +160,6 @@ export default function LogForm({ mode, logId = null }) {
             {errors.band && <p className="mt-1 text-sm text-red-400">{errors.band.message}</p>}
           </div>
 
-          {/* 接收波段 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">接收波段</label>
             <select
@@ -175,7 +173,6 @@ export default function LogForm({ mode, logId = null }) {
             </select>
           </div>
 
-          {/* 频率 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">频率 (MHz)</label>
             <input
@@ -186,7 +183,6 @@ export default function LogForm({ mode, logId = null }) {
             />
           </div>
 
-          {/* 接收频率 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">接收频率 (MHz)</label>
             <input
@@ -197,7 +193,6 @@ export default function LogForm({ mode, logId = null }) {
             />
           </div>
 
-          {/* 传播方式 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">传播方式</label>
             <select
@@ -210,7 +205,6 @@ export default function LogForm({ mode, logId = null }) {
             </select>
           </div>
 
-          {/* 卫星 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">卫星</label>
             <select
@@ -223,7 +217,6 @@ export default function LogForm({ mode, logId = null }) {
             </select>
           </div>
 
-          {/* RST 发送 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">RST 发送</label>
             <input
@@ -233,7 +226,6 @@ export default function LogForm({ mode, logId = null }) {
             />
           </div>
 
-          {/* RST 接收 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">RST 接收</label>
             <input
@@ -244,7 +236,6 @@ export default function LogForm({ mode, logId = null }) {
           </div>
         </div>
 
-        {/* 备注 */}
         <div>
           <label className="block text-sm font-medium text-foreground-muted">备注</label>
           <textarea
