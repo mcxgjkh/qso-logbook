@@ -29,13 +29,13 @@ export default function DashboardLayout({ children }) {
       <div className="min-h-screen relative flex flex-col">
         <nav className="sticky top-0 z-10 glass border-b border-glass backdrop-blur-md bg-glass/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16 items-center">
-              <div className="flex items-center space-x-8">
-                <Link href="/logs" className="text-xl font-bold text-foreground flex items-center gap-2">
+            <div className="flex justify-between h-14 sm:h-16 items-center">
+              <div className="flex items-center gap-4 sm:gap-8">
+                <Link href="/logs" className="text-base sm:text-xl font-bold text-foreground whitespace-nowrap">
                   QSO Logbook
                 </Link>
                 {/* 桌面导航 */}
-                <div className="hidden md:flex space-x-4">
+                <div className="hidden md:flex space-x-1 lg:space-x-4">
                   <NavLink href="/logs" isActive={isActive('/logs')}>日志</NavLink>
                   <NavLink href="/logs/new" isActive={isActive('/logs/new')}>新增</NavLink>
                   <NavLink href="/logs/import" isActive={isActive('/logs/import')}>导入</NavLink>
@@ -47,19 +47,14 @@ export default function DashboardLayout({ children }) {
                   )}
                 </div>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <span className="text-sm text-foreground-muted hidden sm:inline">{displayName}</span>
                 <LogoutButton />
-                {/* 移动端汉堡菜单按钮 */}
                 <button
                   onClick={toggleMenu}
-                  className="md:hidden text-foreground focus:outline-none"
+                  className="md:hidden text-foreground focus:outline-none p-1"
                 >
-                  {menuOpen ? (
-                    <XMarkIcon className="w-6 h-6" />
-                  ) : (
-                    <Bars3Icon className="w-6 h-6" />
-                  )}
+                  {menuOpen ? <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" /> : <Bars3Icon className="w-5 h-5 sm:w-6 sm:h-6" />}
                 </button>
               </div>
             </div>
@@ -67,7 +62,7 @@ export default function DashboardLayout({ children }) {
           {/* 移动端下拉菜单 */}
           {menuOpen && (
             <div className="md:hidden border-t border-glass bg-glass/95 backdrop-blur-md">
-              <div className="px-4 py-2 space-y-1">
+              <div className="px-3 sm:px-4 py-2 space-y-1">
                 <MobileNavLink href="/logs" isActive={isActive('/logs')} onClick={closeMenu}>日志</MobileNavLink>
                 <MobileNavLink href="/logs/new" isActive={isActive('/logs/new')} onClick={closeMenu}>新增</MobileNavLink>
                 <MobileNavLink href="/logs/import" isActive={isActive('/logs/import')} onClick={closeMenu}>导入</MobileNavLink>
@@ -84,7 +79,7 @@ export default function DashboardLayout({ children }) {
             </div>
           )}
         </nav>
-        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 w-full">
+        <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-8 w-full">
           {children}
         </main>
         <Footer />
@@ -97,7 +92,7 @@ function NavLink({ href, children, isActive }) {
   return (
     <Link
       href={href}
-      className={`text-sm font-medium transition ${
+      className={`text-sm font-medium transition whitespace-nowrap ${
         isActive
           ? 'text-blue-400 border-b-2 border-blue-400 pb-1'
           : 'text-foreground-muted hover:text-foreground'
