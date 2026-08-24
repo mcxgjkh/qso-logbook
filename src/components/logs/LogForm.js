@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { qsoSchema } from '@/lib/validators/qsoValidator';
 import { useQSOs } from '@/hooks/useQSOs';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BANDS, MODES, PROPAGATIONS, SATELLITES } from '@/lib/constants';
 
 const getToday = () => {
@@ -36,6 +36,21 @@ const defaultValues = {
 export default function LogForm({ mode, logId = null }) {
   const router = useRouter();
   const { createQSO, updateQSO, qsos } = useQSOs();
+
+  // 自定义对话框状态
+  const [dialog, setDialog] = useState({
+    open: false,
+    title: '',
+    message: '',
+    type: 'error', // 'error' | 'info'
+  });
+
+  const closeDialog = () => setDialog({ ...dialog, open: false });
+
+  const showError = (title, message) => {
+    setDialog({ open: true, title, message, type: 'error' });
+  };
+
   const {
     register,
     handleSubmit,
@@ -44,6 +59,7 @@ export default function LogForm({ mode, logId = null }) {
   } = useForm({
     resolver: zodResolver(qsoSchema),
     defaultValues,
+    shouldFocusError: false,
   });
 
   useEffect(() => {
@@ -60,6 +76,7 @@ export default function LogForm({ mode, logId = null }) {
     }
   }, [mode, logId, qsos, reset]);
 
+  // 提交成功
   const onSubmit = async (data) => {
     try {
       const formattedData = {
@@ -73,26 +90,63 @@ export default function LogForm({ mode, logId = null }) {
       } else {
         await updateQSO(logId, formattedData);
       }
-      // ✅ 先移除焦点，再跳转，避免焦点停留在输入框
       if (document.activeElement) {
         document.activeElement.blur();
       }
-      // 让浏览器有时间处理 blur 事件
-      await new Promise(resolve => setTimeout(resolve, 0));
       router.push('/logs');
     } catch (error) {
-      alert('保存失败: ' + error.message);
+      showError('保存失败', error.message || '未知错误');
     }
+  };
+
+  // 验证失败
+  const onError = (errors) => {
+    const errorMessages = Object.entries(errors).map(([field, err]) => {
+      let label = field;
+      switch (field) {
+        case 'call_sign': label = '呼号'; break;
+        case 'qso_date': label = '日期'; break;
+        case 'time_on': label = '时间'; break;
+        case 'mode': label = '模式'; break;
+        case 'band': label = '波段'; break;
+        default: label = field;
+      }
+      return `${label}: ${err.message}`;
+    }).join('\n');
+    showError('请修正以下错误', errorMessages);
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    handleSubmit(onSubmit, onError)(e);
   };
 
   return (
     <div className="glass-card rounded-2xl p-4 sm:p-6 max-w-4xl mx-auto">
+      {/* 自定义对话框 */}
+      {dialog.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="glass-card rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-foreground mb-2">{dialog.title}</h3>
+            <p className="text-foreground-muted mb-6 whitespace-pre-wrap">{dialog.message}</p>
+            <div className="flex justify-end">
+              <button
+                onClick={closeDialog}
+                className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm hover:bg-blue-700 transition"
+              >
+                知道了
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">
         {mode === 'create' ? '新增通联记录' : '编辑通联记录'}
       </h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+
+      <form onSubmit={handleFormSubmit} className="space-y-4 sm:space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-          {/* 呼号 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">
               呼号 <span className="text-red-400">*</span>
@@ -105,7 +159,6 @@ export default function LogForm({ mode, logId = null }) {
             {errors.call_sign && <p className="mt-1 text-sm text-red-400">{errors.call_sign.message}</p>}
           </div>
 
-          {/* UTC 日期 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">
               UTC 日期 <span className="text-red-400">*</span>
@@ -119,21 +172,19 @@ export default function LogForm({ mode, logId = null }) {
             {errors.qso_date && <p className="mt-1 text-sm text-red-400">{errors.qso_date.message}</p>}
           </div>
 
-          {/* UTC 时间 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">
-              UTC 时间 (HH:MM) <span className="text-red-400">*</span>
+              UTC 时间 (HH:MM 或 HH:MM:SS) <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
               {...register('time_on')}
               className="mt-1 block w-full px-3 sm:px-4 py-2 border border-glass rounded-xl bg-glass focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-              placeholder="HH:MM"
+              placeholder="HH:MM 或 HH:MM:SS"
             />
             {errors.time_on && <p className="mt-1 text-sm text-red-400">{errors.time_on.message}</p>}
           </div>
 
-          {/* 模式 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">
               模式 <span className="text-red-400">*</span>
@@ -150,7 +201,6 @@ export default function LogForm({ mode, logId = null }) {
             {errors.mode && <p className="mt-1 text-sm text-red-400">{errors.mode.message}</p>}
           </div>
 
-          {/* 波段 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">
               波段 <span className="text-red-400">*</span>
@@ -167,7 +217,6 @@ export default function LogForm({ mode, logId = null }) {
             {errors.band && <p className="mt-1 text-sm text-red-400">{errors.band.message}</p>}
           </div>
 
-          {/* 接收波段 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">接收波段</label>
             <select
@@ -181,7 +230,6 @@ export default function LogForm({ mode, logId = null }) {
             </select>
           </div>
 
-          {/* 频率 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">频率 (MHz)</label>
             <input
@@ -192,7 +240,6 @@ export default function LogForm({ mode, logId = null }) {
             />
           </div>
 
-          {/* 接收频率 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">接收频率 (MHz)</label>
             <input
@@ -203,7 +250,6 @@ export default function LogForm({ mode, logId = null }) {
             />
           </div>
 
-          {/* 传播方式 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">传播方式</label>
             <select
@@ -216,7 +262,6 @@ export default function LogForm({ mode, logId = null }) {
             </select>
           </div>
 
-          {/* 卫星 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">卫星</label>
             <select
@@ -229,7 +274,6 @@ export default function LogForm({ mode, logId = null }) {
             </select>
           </div>
 
-          {/* RST 发送 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">RST 发送</label>
             <input
@@ -239,7 +283,6 @@ export default function LogForm({ mode, logId = null }) {
             />
           </div>
 
-          {/* RST 接收 */}
           <div>
             <label className="block text-sm font-medium text-foreground-muted">RST 接收</label>
             <input
@@ -250,7 +293,6 @@ export default function LogForm({ mode, logId = null }) {
           </div>
         </div>
 
-        {/* 备注 */}
         <div>
           <label className="block text-sm font-medium text-foreground-muted">备注</label>
           <textarea
